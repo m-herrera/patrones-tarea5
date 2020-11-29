@@ -36,11 +36,12 @@ from sklearn.cluster import KMeans
 from sklearn.datasets import load_digits
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import scale
+from tensorflow.keras.datasets import mnist
 
 np.random.seed(42)
 
-X_digits, y_digits = load_digits(return_X_y=True)
-data = scale(X_digits)
+(X_digits, y_digits), (x_test, y_test) = mnist.load_data()
+data = X_digits.reshape(60000, 784)
 
 n_samples, n_features = data.shape
 n_digits = len(np.unique(y_digits))
@@ -84,6 +85,21 @@ bench_k_means(KMeans(init=pca.components_, n_clusters=n_digits, n_init=1),
               data=data)
 print(82 * '_')
 
+full_dimensions = KMeans(init='k-means++', n_clusters=n_digits, n_init=10)
+full_dimensions.fit(data)
+centroids = full_dimensions.cluster_centers_
+print(centroids.shape)
+images = centroids.reshape(10, 28, 28).astype('uint8')
+
+plt.figure(figsize=(20, 15))
+for i in range(10):
+    plt.subplot(4, 3, i + 1)
+    plt.imshow(images[i], cmap='gray', vmin=0, vmax=255)
+
+plt.show()
+
+
+
 # #############################################################################
 # Visualize the results on PCA-reduced data
 
@@ -91,12 +107,16 @@ reduced_data = PCA(n_components=2).fit_transform(data)
 kmeans = KMeans(init='k-means++', n_clusters=n_digits, n_init=10)
 kmeans.fit(reduced_data)
 
-# Step size of the mesh. Decrease to increase the quality of the VQ.
-h = .02     # point in the mesh [x_min, x_max]x[y_min, y_max].
+print("Reduce data ", reduced_data.shape)
+
 
 # Plot the decision boundary. For that, we will assign a color to each
 x_min, x_max = reduced_data[:, 0].min() - 1, reduced_data[:, 0].max() + 1
 y_min, y_max = reduced_data[:, 1].min() - 1, reduced_data[:, 1].max() + 1
+
+# Step size of the mesh. Decrease to increase the quality of the VQ.
+h = (x_max - x_min) / 2000     # point in the mesh [x_min, x_max]x[y_min, y_max].
+
 xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
 
 # Obtain labels for each point in mesh. Use last trained model.

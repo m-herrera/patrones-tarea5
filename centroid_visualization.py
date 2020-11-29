@@ -2,9 +2,8 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 
 
-def plot_centroid(data, k, dataset='mnist', init='k-means++', n_init=10):
-
-    if(dataset == 'mnist'):
+def plot_centroid(data, k, dataset='full_mnist', init='k-means++', n_init=10):
+    if dataset == 'full_mnist':
         shape = 28
         max_value = 255
     else:

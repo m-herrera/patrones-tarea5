@@ -25,6 +25,8 @@ silhouette   silhouette coefficient
 =========== ========================================================
 
 """
+from centroid_visualization import plot_centroid
+
 print(__doc__)
 
 from time import time
@@ -52,7 +54,6 @@ sample_size = 300
 print("n_digits: %d, \t n_samples %d, \t n_features %d"
       % (n_digits, n_samples, n_features))
 
-
 print(82 * '_')
 print('init\t\ttime\tinertia\thomo\tcompl\tv-meas\tARI\tAMI\tsilhouette')
 
@@ -66,39 +67,27 @@ def bench_k_means(estimator, name, data):
              metrics.completeness_score(labels, estimator.labels_),
              metrics.v_measure_score(labels, estimator.labels_),
              metrics.adjusted_rand_score(labels, estimator.labels_),
-             metrics.adjusted_mutual_info_score(labels,  estimator.labels_),
+             metrics.adjusted_mutual_info_score(labels, estimator.labels_),
              metrics.silhouette_score(data, estimator.labels_,
                                       metric='euclidean',
                                       sample_size=sample_size)))
 
-bench_k_means(KMeans(init='k-means++', n_clusters=n_digits, n_init=10),
-              name="k-means++", data=data)
 
-bench_k_means(KMeans(init='random', n_clusters=n_digits, n_init=10),
-              name="random", data=data)
-
-# in this case the seeding of the centers is deterministic, hence we run the
-# kmeans algorithm only once with n_init=1
-pca = PCA(n_components=n_digits).fit(data)
-bench_k_means(KMeans(init=pca.components_, n_clusters=n_digits, n_init=1),
-              name="PCA-based",
-              data=data)
+# bench_k_means(KMeans(init='k-means++', n_clusters=n_digits, n_init=10),
+#               name="k-means++", data=data)
+#
+# bench_k_means(KMeans(init='random', n_clusters=n_digits, n_init=10),
+#               name="random", data=data)
+#
+# # in this case the seeding of the centers is deterministic, hence we run the
+# # kmeans algorithm only once with n_init=1
+# pca = PCA(n_components=n_digits).fit(data)
+# bench_k_means(KMeans(init=pca.components_, n_clusters=n_digits, n_init=1),
+#               name="PCA-based",
+#               data=data)
 print(82 * '_')
 
-full_dimensions = KMeans(init='k-means++', n_clusters=n_digits, n_init=10)
-full_dimensions.fit(data)
-centroids = full_dimensions.cluster_centers_
-print(centroids.shape)
-images = centroids.reshape(10, 28, 28).astype('uint8')
-
-plt.figure(figsize=(20, 15))
-for i in range(10):
-    plt.subplot(4, 3, i + 1)
-    plt.imshow(images[i], cmap='gray', vmin=0, vmax=255)
-
-plt.show()
-
-
+plot_centroid(data, 3)
 
 # #############################################################################
 # Visualize the results on PCA-reduced data
@@ -109,13 +98,12 @@ kmeans.fit(reduced_data)
 
 print("Reduce data ", reduced_data.shape)
 
-
 # Plot the decision boundary. For that, we will assign a color to each
 x_min, x_max = reduced_data[:, 0].min() - 1, reduced_data[:, 0].max() + 1
 y_min, y_max = reduced_data[:, 1].min() - 1, reduced_data[:, 1].max() + 1
 
 # Step size of the mesh. Decrease to increase the quality of the VQ.
-h = (x_max - x_min) / 2000     # point in the mesh [x_min, x_max]x[y_min, y_max].
+h = (x_max - x_min) / 2000  # point in the mesh [x_min, x_max]x[y_min, y_max].
 
 xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
 
